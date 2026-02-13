@@ -30,7 +30,7 @@ const Index = () => {
       {screen === 'home' && <HomeScreen onStart={handleStart} />}
       {screen === 'camera' && <CameraScreen onCapture={handleCapture} onBack={handleRestart} />}
       {screen === 'puzzle' && capturedImage && (
-        <PuzzleScreen imageDataURL={capturedImage} gridSize={gridLevel.size} onRestart={handleRestart} />
+        <PuzzleScreen imageDataURL={capturedImage} gridSize={gridLevel.size} levelLabel={gridLevel.label} onRestart={handleRestart} />
       )}
     </>
   );

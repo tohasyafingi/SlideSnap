@@ -28,7 +28,7 @@ const HomeScreen = ({ onStart }: HomeScreenProps) => {
           <Puzzle className="w-10 h-10 text-primary" />
         </div>
         <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-3 game-glow-text text-foreground">
-          Slide<span className="text-primary">Snap</span>
+          Heedop<span className="text-primary">WNI</span>
         </h1>
         {/* <p className="text-muted-foreground text-lg">
           Foto → Puzzle → Selesaikan!

@@ -8,18 +8,25 @@ export function useCamera() {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user'); // Default: kamera depan
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   // Minta izin kamera dan mulai streaming
-  const startCamera = useCallback(async () => {
+  const startCamera = useCallback(async (facing: 'user' | 'environment' = facingMode) => {
     setIsLoading(true);
     setError(null);
     try {
+      // Stop track lama jika ada
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+      }
+
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment', width: { ideal: 720 }, height: { ideal: 720 } },
+        video: { facingMode: facing, width: { ideal: 720 }, height: { ideal: 720 } },
         audio: false,
       });
       setStream(mediaStream);
+      setFacingMode(facing);
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
       }
@@ -29,7 +36,7 @@ export function useCamera() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [stream, facingMode]);
 
   // Stop semua track kamera
   const stopCamera = useCallback(() => {
@@ -38,6 +45,12 @@ export function useCamera() {
       setStream(null);
     }
   }, [stream]);
+
+  // Toggle antara kamera depan dan belakang
+  const toggleCamera = useCallback(async () => {
+    const newFacing = facingMode === 'user' ? 'environment' : 'user';
+    await startCamera(newFacing);
+  }, [facingMode, startCamera]);
 
   /**
    * Capture frame dari video, crop center menjadi square,
@@ -72,5 +85,5 @@ export function useCamera() {
     return dataURL;
   }, [stopCamera]);
 
-  return { videoRef, stream, error, isLoading, startCamera, stopCamera, capture };
+  return { videoRef, stream, error, isLoading, facingMode, startCamera, stopCamera, toggleCamera, capture };
 }

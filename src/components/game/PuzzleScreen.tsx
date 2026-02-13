@@ -6,6 +6,7 @@ import Tile from './Tile';
 interface PuzzleScreenProps {
   imageDataURL: string;
   gridSize: number;
+  levelLabel: string;
   onRestart: () => void;
 }
 
@@ -13,7 +14,7 @@ interface PuzzleScreenProps {
  * Layar puzzle utama.
  * Menampilkan grid tiles, preview gambar asli, timer, move counter, dan modal win.
  */
-const PuzzleScreen = ({ imageDataURL, gridSize: initialGridSize, onRestart }: PuzzleScreenProps) => {
+const PuzzleScreen = ({ imageDataURL, gridSize: initialGridSize, levelLabel, onRestart }: PuzzleScreenProps) => {
   const { tiles, moveCount, isWon, formattedTime, timer, gridSize, initPuzzle, moveTile, canMove } =
     usePuzzle(initialGridSize);
 
@@ -154,6 +155,9 @@ const PuzzleScreen = ({ imageDataURL, gridSize: initialGridSize, onRestart }: Pu
               <Trophy className="w-8 h-8 text-primary" />
             </div>
             <h2 className="text-2xl font-bold text-foreground mb-2">You Win! 🎉</h2>
+            <p className="text-sm text-muted-foreground mb-6">
+              <span className="text-primary font-semibold">{levelLabel}</span>
+            </p>
             <p className="text-muted-foreground mb-6">
               Selesai dalam <span className="text-primary font-mono font-semibold">{formattedTime}</span> dengan{' '}
               <span className="text-game-accent2 font-mono font-semibold">{moveCount}</span> langkah

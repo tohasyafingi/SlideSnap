@@ -1,6 +1,6 @@
-# SlideSnap Deployment Guide
+# HeedopWNI Deployment Guide
 
-SlideSnap adalah aplikasi photo puzzle game yang pure frontend—tidak ada backend atau database. Dapat di-deploy ke CDN mana saja.
+HeedopWNI adalah aplikasi photo puzzle game yang pure frontend—tidak ada backend atau database. Dapat di-deploy ke CDN mana saja.
 
 ## Prerequisites
 
@@ -38,7 +38,7 @@ Menghasilkan file static di `dist/` folder, siap untuk CDN.
    - Build output directory: `dist`
 4. Deploy!
 
-Contoh: https://slidesnap.pages.dev
+Contoh: https://heedopwni.pages.dev
 
 ### Option 2: Vercel (Free)
 
@@ -102,4 +102,4 @@ npm run preview
 
 ## License
 
-SlideSnap © 2026 — Open Source
+HeedopWNI © 2026 — Open Source

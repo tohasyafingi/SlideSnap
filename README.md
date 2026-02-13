@@ -1,4 +1,4 @@
-# SlideSnap
+# HeedopWNI
 
 A modern photo puzzle game where you capture images and solve puzzles.
 
@@ -109,4 +109,4 @@ npm run preview
 
 ## License
 
-SlideSnap © 2026 — Open Source
+HeedopWNI © 2026 — Open Source

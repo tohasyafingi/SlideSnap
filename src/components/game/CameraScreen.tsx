@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Camera, RotateCcw, X } from 'lucide-react';
+import { Camera, RotateCcw, X, Repeat, User } from 'lucide-react';
 import { useCamera } from '@/hooks/useCamera';
 
 interface CameraScreenProps {
@@ -10,9 +10,10 @@ interface CameraScreenProps {
 /**
  * Layar kamera: live preview dan tombol capture.
  * Kamera otomatis start saat mount dan stop saat unmount.
+ * Default menggunakan kamera depan (user).
  */
 const CameraScreen = ({ onCapture, onBack }: CameraScreenProps) => {
-  const { videoRef, stream, error, isLoading, startCamera, stopCamera, capture } = useCamera();
+  const { videoRef, stream, error, isLoading, facingMode, startCamera, stopCamera, toggleCamera, capture } = useCamera();
 
   // Start kamera saat komponen mount
   useEffect(() => {
@@ -35,11 +36,19 @@ const CameraScreen = ({ onCapture, onBack }: CameraScreenProps) => {
         <button
           onClick={() => { stopCamera(); onBack(); }}
           className="p-2 rounded-lg bg-card border border-border text-muted-foreground hover:text-foreground transition-colors"
+          title="Kembali"
         >
           <X className="w-5 h-5" />
         </button>
         <h2 className="text-lg font-semibold text-foreground">Ambil Foto</h2>
-        <div className="w-9" /> {/* Spacer */}
+        <button
+          onClick={toggleCamera}
+          disabled={isLoading || !stream}
+          className="p-2 rounded-lg bg-card border border-border text-muted-foreground hover:text-foreground disabled:opacity-50 transition-colors"
+          title={facingMode === 'user' ? 'Ganti ke kamera belakang' : 'Ganti ke kamera depan'}
+        >
+          <Repeat className="w-5 h-5" />
+        </button>
       </div>
 
       {/* Video preview */}
@@ -54,7 +63,7 @@ const CameraScreen = ({ onCapture, onBack }: CameraScreenProps) => {
             <Camera className="w-12 h-12 text-destructive mb-3" />
             <p className="text-destructive text-sm">{error}</p>
             <button
-              onClick={startCamera}
+              onClick={() => startCamera()}
               className="mt-4 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium"
             >
               Coba Lagi
@@ -78,6 +87,17 @@ const CameraScreen = ({ onCapture, onBack }: CameraScreenProps) => {
                 <div key={i} className="border border-foreground/10" />
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Camera mode indicator */}
+        {stream && (
+          <div className="absolute top-3 right-3 p-2 rounded-full bg-black/50 text-white">
+            {facingMode === 'user' ? (
+              <User className="w-4 h-4" />
+            ) : (
+              <Camera className="w-4 h-4" />
+            )}
           </div>
         )}
       </div>
