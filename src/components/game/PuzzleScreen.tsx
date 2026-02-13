@@ -1,30 +1,30 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Home, RotateCcw, Clock, Footprints, Trophy } from 'lucide-react';
+import { Home, RotateCcw, Clock, Footprints, Trophy, Eye, EyeOff } from 'lucide-react';
 import { usePuzzle } from '@/hooks/usePuzzle';
 import Tile from './Tile';
 
 interface PuzzleScreenProps {
   imageDataURL: string;
+  gridSize: number;
   onRestart: () => void;
 }
 
 /**
  * Layar puzzle utama.
- * Menampilkan grid tiles, timer, move counter, dan modal win.
+ * Menampilkan grid tiles, preview gambar asli, timer, move counter, dan modal win.
  */
-const PuzzleScreen = ({ imageDataURL, onRestart }: PuzzleScreenProps) => {
-  const { tiles, emptyIndex, moveCount, isWon, formattedTime, gridSize, initPuzzle, moveTile, canMove } =
-    usePuzzle(4);
+const PuzzleScreen = ({ imageDataURL, gridSize: initialGridSize, onRestart }: PuzzleScreenProps) => {
+  const { tiles, moveCount, isWon, formattedTime, gridSize, initPuzzle, moveTile, canMove } =
+    usePuzzle(initialGridSize);
 
-  // Hitung ukuran puzzle berdasarkan viewport
   const [puzzleSize, setPuzzleSize] = useState(300);
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     const updateSize = () => {
       const vw = window.innerWidth;
       const vh = window.innerHeight;
-      // Max 600px, min 280px, sisakan ruang untuk UI
-      const maxSize = Math.min(vw - 32, vh - 220, 600);
+      const maxSize = Math.min(vw - 32, vh - 260, 600);
       setPuzzleSize(Math.max(280, maxSize));
     };
     updateSize();
@@ -32,16 +32,13 @@ const PuzzleScreen = ({ imageDataURL, onRestart }: PuzzleScreenProps) => {
     return () => window.removeEventListener('resize', updateSize);
   }, []);
 
-  // Inisialisasi puzzle saat mount
   useEffect(() => {
     initPuzzle(puzzleSize);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [puzzleSize]);
 
-  const tileSize = puzzleSize / gridSize;
   const gap = 3;
 
-  // Buat lookup posisi berdasarkan currentIndex
   const tilesByPosition = useMemo(() => {
     const map = new Map<number, (typeof tiles)[0]>();
     tiles.forEach((t) => map.set(t.currentIndex, t));
@@ -71,14 +68,40 @@ const PuzzleScreen = ({ imageDataURL, onRestart }: PuzzleScreenProps) => {
           </div>
         </div>
 
-        <button
-          onClick={() => initPuzzle(puzzleSize)}
-          className="p-2 rounded-lg bg-card border border-border text-muted-foreground hover:text-foreground transition-colors"
-          title="Shuffle ulang"
-        >
-          <RotateCcw className="w-5 h-5" />
-        </button>
+        <div className="flex items-center gap-1">
+          {/* Toggle preview gambar asli */}
+          <button
+            onClick={() => setShowPreview((p) => !p)}
+            className={`p-2 rounded-lg border transition-colors ${
+              showPreview
+                ? 'bg-primary/15 border-primary/40 text-primary'
+                : 'bg-card border-border text-muted-foreground hover:text-foreground'
+            }`}
+            title="Preview gambar asli"
+          >
+            {showPreview ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+          </button>
+          <button
+            onClick={() => initPuzzle(puzzleSize)}
+            className="p-2 rounded-lg bg-card border border-border text-muted-foreground hover:text-foreground transition-colors"
+            title="Shuffle ulang"
+          >
+            <RotateCcw className="w-5 h-5" />
+          </button>
+        </div>
       </div>
+
+      {/* Preview gambar asli (collapsible) */}
+      {showPreview && (
+        <div className="mb-4 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div
+            className="rounded-xl overflow-hidden border border-primary/30"
+            style={{ width: Math.min(puzzleSize * 0.4, 140), height: Math.min(puzzleSize * 0.4, 140) }}
+          >
+            <img src={imageDataURL} alt="Gambar asli" className="w-full h-full object-cover" />
+          </div>
+        </div>
+      )}
 
       {/* Puzzle grid */}
       <div
@@ -135,12 +158,9 @@ const PuzzleScreen = ({ imageDataURL, onRestart }: PuzzleScreenProps) => {
               Selesai dalam <span className="text-primary font-mono font-semibold">{formattedTime}</span> dengan{' '}
               <span className="text-game-accent2 font-mono font-semibold">{moveCount}</span> langkah
             </p>
-
-            {/* Preview gambar utuh */}
             <div className="w-32 h-32 mx-auto rounded-xl overflow-hidden mb-6 border border-border">
               <img src={imageDataURL} alt="Completed puzzle" className="w-full h-full object-cover" />
             </div>
-
             <button
               onClick={onRestart}
               className="w-full px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold
