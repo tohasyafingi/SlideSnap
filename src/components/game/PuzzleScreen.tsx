@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Home, RotateCcw, Clock, Footprints, Trophy, Eye, EyeOff } from 'lucide-react';
 import { usePuzzle } from '@/hooks/usePuzzle';
 import Tile from './Tile';
@@ -7,18 +7,20 @@ interface PuzzleScreenProps {
   imageDataURL: string;
   gridSize: number;
   onRestart: () => void;
+  onWin: (result: { moves: number; timeSeconds: number }) => void;
 }
 
 /**
  * Layar puzzle utama.
  * Menampilkan grid tiles, preview gambar asli, timer, move counter, dan modal win.
  */
-const PuzzleScreen = ({ imageDataURL, gridSize: initialGridSize, onRestart }: PuzzleScreenProps) => {
-  const { tiles, moveCount, isWon, formattedTime, gridSize, initPuzzle, moveTile, canMove } =
+const PuzzleScreen = ({ imageDataURL, gridSize: initialGridSize, onRestart, onWin }: PuzzleScreenProps) => {
+  const { tiles, moveCount, isWon, formattedTime, timer, gridSize, initPuzzle, moveTile, canMove } =
     usePuzzle(initialGridSize);
 
   const [puzzleSize, setPuzzleSize] = useState(300);
   const [showPreview, setShowPreview] = useState(false);
+  const reportedWinRef = useRef(false);
 
   useEffect(() => {
     const updateSize = () => {
@@ -36,6 +38,19 @@ const PuzzleScreen = ({ imageDataURL, gridSize: initialGridSize, onRestart }: Pu
     initPuzzle(puzzleSize);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [puzzleSize]);
+
+  useEffect(() => {
+    if (isWon && !reportedWinRef.current) {
+      reportedWinRef.current = true;
+      onWin({ moves: moveCount, timeSeconds: timer });
+    }
+  }, [isWon, moveCount, timer, formattedTime, onWin]);
+
+  useEffect(() => {
+    if (!isWon && moveCount === 0 && timer === 0) {
+      reportedWinRef.current = false;
+    }
+  }, [isWon, moveCount, timer]);
 
   const gap = 3;
 

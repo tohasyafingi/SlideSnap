@@ -1,23 +1,39 @@
-import { useState } from 'react';
-import { Camera, Puzzle, MoveRight } from 'lucide-react';
+import { useState, type FormEvent } from 'react';
+import { Camera, Puzzle, MoveRight, Lock, Trophy, X } from 'lucide-react';
 
 export type GridLevel = { size: number; label: string; tag: string };
 
 const LEVELS: GridLevel[] = [
-  { size: 3, label: '3×3', tag: 'Basic' },
-  { size: 4, label: '4×4', tag: 'Medium' },
-  { size: 5, label: '5×5', tag: 'WNI' },
+  { size: 2, label: 'Tutorial', tag: '2x2' },
+  { size: 3, label: 'Basic', tag: '3x3' },
+  { size: 4, label: 'Medium', tag: '4x4' },
+  { size: 5, label: 'WNI', tag: '5x5' },
 ];
 
 interface HomeScreenProps {
-  onStart: (level: GridLevel) => void;
+  onStart: (level: GridLevel, playerName: string) => void;
+  onOpenLeaderboard: () => void;
 }
 
 /**
  * Layar awal game: judul, rules, pilihan level, dan tombol start.
  */
-const HomeScreen = ({ onStart }: HomeScreenProps) => {
-  const [selected, setSelected] = useState<GridLevel>(LEVELS[1]);
+const HomeScreen = ({ onStart, onOpenLeaderboard }: HomeScreenProps) => {
+  const [selected, setSelected] = useState<GridLevel>(LEVELS[0]);
+  const [showNameModal, setShowNameModal] = useState(false);
+  const [playerName, setPlayerName] = useState('');
+
+  const handleStartClick = () => {
+    setShowNameModal(true);
+  };
+
+  const handleConfirmName = (event: FormEvent) => {
+    event.preventDefault();
+    const trimmed = playerName.trim();
+    if (!trimmed) return;
+    onStart(selected, trimmed);
+    setShowNameModal(false);
+  };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-6 text-center">
@@ -29,22 +45,23 @@ const HomeScreen = ({ onStart }: HomeScreenProps) => {
         <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-3 game-glow-text text-foreground">
           Slide<span className="text-primary">Snap</span>
         </h1>
-        <p className="text-muted-foreground text-lg">
+        {/* <p className="text-muted-foreground text-lg">
           Foto → Puzzle → Selesaikan!
-        </p>
+        </p> */}
       </div>
 
       {/* Rules */}
       <div className="w-full max-w-sm space-y-3 mb-8">
-        <RuleItem icon={<Camera className="w-5 h-5 text-primary" />} text="Ambil foto dengan kamera" />
-        <RuleItem icon={<Puzzle className="w-5 h-5 text-game-accent2" />} text="Foto dipotong jadi puzzle" />
-        <RuleItem icon={<MoveRight className="w-5 h-5 text-accent" />} text="Geser tiles untuk menyusun kembali" />
+        <RuleItem icon={<Lock className="w-5 h-5 text-accent" />} text="Foto kamu tidak akan disimpan di server" />
+        <RuleItem icon={<Camera className="w-5 h-5 text-primary" />} text="Ambil foto" />
+        <RuleItem icon={<Puzzle className="w-5 h-5 text-game-accent2" />} text="Pecah menjadi kepingan" />
+        <RuleItem icon={<MoveRight className="w-5 h-5 text-accent" />} text="Susun kembali fotonya" />
       </div>
 
       {/* Level selector */}
       <div className="w-full max-w-sm mb-8">
         <p className="text-sm text-muted-foreground mb-3">Pilih Level</p>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {LEVELS.map((level) => (
             <button
               key={level.size}
@@ -66,20 +83,78 @@ const HomeScreen = ({ onStart }: HomeScreenProps) => {
       </div>
 
       {/* Tombol Start */}
-      <button
-        onClick={() => onStart(selected)}
-        className="group relative px-8 py-4 rounded-xl bg-primary text-primary-foreground font-semibold text-lg
-                   transition-all duration-300 hover:scale-105 active:scale-95 game-glow"
-      >
-        <span className="flex items-center gap-2">
-          Start Game
-          <MoveRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-        </span>
-      </button>
+      <div className="flex flex-col items-center gap-3">
+        <button
+          onClick={handleStartClick}
+          className="group relative px-8 py-4 rounded-xl bg-primary text-primary-foreground font-semibold text-lg
+                     transition-all duration-300 hover:scale-105 active:scale-95 game-glow"
+        >
+          <span className="flex items-center gap-2">
+            Start Game
+          </span>
+        </button>
+
+        <button
+          onClick={onOpenLeaderboard}
+          className="px-6 py-3 rounded-xl border border-border bg-card text-foreground font-medium
+                     transition-all duration-200 hover:border-muted-foreground/40"
+        >
+          <span className="flex items-center gap-2">
+            <Trophy className="w-4 h-4 text-game-accent2" />
+            Leaderboard
+          </span>
+        </button>
+      </div>
 
       <p className="mt-6 text-xs text-muted-foreground max-w-xs">
-        Foto kamu tidak disimpan dan tidak dikirim ke server manapun. 100% private.
+        100% private.
       </p>
+
+      {showNameModal && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-card border border-border rounded-2xl p-6 w-full max-w-sm text-left animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-foreground">Nama Pemain</h2>
+              <button
+                onClick={() => setShowNameModal(false)}
+                className="p-2 rounded-lg text-muted-foreground hover:text-foreground"
+                aria-label="Tutup"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <form onSubmit={handleConfirmName} className="space-y-4">
+              <div>
+                <label className="block text-sm text-muted-foreground mb-2">Masukkan nama untuk leaderboard</label>
+                <input
+                  value={playerName}
+                  onChange={(event) => setPlayerName(event.target.value)}
+                  placeholder="Nama kamu"
+                  className="w-full px-4 py-3 rounded-xl bg-background border border-border text-foreground
+                             focus:outline-none focus:ring-2 focus:ring-primary/40"
+                  maxLength={24}
+                  autoFocus
+                />
+              </div>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowNameModal(false)}
+                  className="flex-1 px-4 py-3 rounded-xl border border-border bg-card text-foreground"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-3 rounded-xl bg-primary text-primary-foreground font-semibold"
+                >
+                  Lanjut
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
