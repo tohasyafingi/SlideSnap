@@ -1,20 +1,19 @@
 import { useState } from 'react';
-import HomeScreen from '@/components/game/HomeScreen';
+import HomeScreen, { type GridLevel } from '@/components/game/HomeScreen';
 import CameraScreen from '@/components/game/CameraScreen';
 import PuzzleScreen from '@/components/game/PuzzleScreen';
 
-/** State layar aplikasi */
 type Screen = 'home' | 'camera' | 'puzzle';
 
-/**
- * Halaman utama: mengatur flow antar screen.
- * Home → Camera → Puzzle → Home (restart)
- */
 const Index = () => {
   const [screen, setScreen] = useState<Screen>('home');
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [gridLevel, setGridLevel] = useState<GridLevel>({ size: 4, label: '4×4', tag: 'Medium' });
 
-  const handleStart = () => setScreen('camera');
+  const handleStart = (level: GridLevel) => {
+    setGridLevel(level);
+    setScreen('camera');
+  };
 
   const handleCapture = (imageDataURL: string) => {
     setCapturedImage(imageDataURL);
@@ -31,7 +30,7 @@ const Index = () => {
       {screen === 'home' && <HomeScreen onStart={handleStart} />}
       {screen === 'camera' && <CameraScreen onCapture={handleCapture} onBack={handleRestart} />}
       {screen === 'puzzle' && capturedImage && (
-        <PuzzleScreen imageDataURL={capturedImage} onRestart={handleRestart} />
+        <PuzzleScreen imageDataURL={capturedImage} gridSize={gridLevel.size} onRestart={handleRestart} />
       )}
     </>
   );
