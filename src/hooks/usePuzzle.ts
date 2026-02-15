@@ -14,11 +14,12 @@ export interface PuzzleTile {
  */
 export function usePuzzle(gridSize: number = 4) {
   const [tiles, setTiles] = useState<PuzzleTile[]>([]);
-  const [emptyIndex, setEmptyIndex] = useState<number>(gridSize * gridSize - 1);
   const [moveCount, setMoveCount] = useState(0);
   const [isWon, setIsWon] = useState(false);
   const [timer, setTimer] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [lastSwap, setLastSwap] = useState<[number, number] | null>(null);
   const intervalRef = useRef<number | null>(null);
 
   // Timer logic
@@ -33,55 +34,21 @@ export function usePuzzle(gridSize: number = 4) {
     };
   }, [isRunning, isWon]);
 
-  /**
-   * Hitung jumlah inversion untuk cek solvability.
-   * Untuk grid genap (4x4), puzzle solvable jika:
-   * - blank di baris ganjil dari bawah + inversion genap, ATAU
-   * - blank di baris genap dari bawah + inversion ganjil
-   */
-  const isSolvable = useCallback(
-    (arr: number[], emptyPos: number): boolean => {
-      let inversions = 0;
-      const filtered = arr.filter((v) => v !== gridSize * gridSize - 1);
-      for (let i = 0; i < filtered.length; i++) {
-        for (let j = i + 1; j < filtered.length; j++) {
-          if (filtered[i] > filtered[j]) inversions++;
-        }
-      }
+  useEffect(() => {
+    if (!lastSwap) return;
+    const timeout = window.setTimeout(() => setLastSwap(null), 220);
+    return () => window.clearTimeout(timeout);
+  }, [lastSwap]);
 
-      if (gridSize % 2 !== 0) {
-        // Grid ganjil: solvable jika inversion genap
-        return inversions % 2 === 0;
-      } else {
-        // Grid genap: pertimbangkan posisi baris blank dari bawah
-        const blankRowFromBottom = gridSize - Math.floor(emptyPos / gridSize);
-        if (blankRowFromBottom % 2 === 0) {
-          return inversions % 2 !== 0;
-        } else {
-          return inversions % 2 === 0;
-        }
-      }
-    },
-    [gridSize]
-  );
-
-  /** Fisher-Yates shuffle dengan jaminan solvable */
-  const shuffleArray = useCallback(
-    (arr: number[]): { shuffled: number[]; emptyPos: number } => {
-      const shuffled = [...arr];
-      let emptyPos: number;
-      do {
-        for (let i = shuffled.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-        }
-        emptyPos = shuffled.indexOf(gridSize * gridSize - 1);
-      } while (!isSolvable(shuffled, emptyPos));
-
-      return { shuffled, emptyPos };
-    },
-    [gridSize, isSolvable]
-  );
+  /** Fisher-Yates shuffle untuk mode tukar tile (tanpa tile kosong) */
+  const shuffleArray = useCallback((arr: number[]): number[] => {
+    const shuffled = [...arr];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  }, []);
 
   /** Inisialisasi puzzle dari image */
   const initPuzzle = useCallback(
@@ -90,7 +57,7 @@ export function usePuzzle(gridSize: number = 4) {
       const tileSize = imageSize / gridSize;
       const indices = Array.from({ length: total }, (_, i) => i);
 
-      const { shuffled, emptyPos } = shuffleArray(indices);
+      const shuffled = shuffleArray(indices);
 
       const newTiles: PuzzleTile[] = shuffled.map((correctIdx, currentIdx) => {
         const col = correctIdx % gridSize;
@@ -104,57 +71,48 @@ export function usePuzzle(gridSize: number = 4) {
       });
 
       setTiles(newTiles);
-      setEmptyIndex(emptyPos);
       setMoveCount(0);
       setTimer(0);
       setIsWon(false);
       setIsRunning(true);
+      setSelectedIndex(null);
+      setLastSwap(null);
     },
     [gridSize, shuffleArray]
   );
 
-  /** Cek apakah tile bisa digeser (bersebelahan dengan empty) */
-  const canMove = useCallback(
-    (tileIndex: number): boolean => {
-      const tileRow = Math.floor(tileIndex / gridSize);
-      const tileCol = tileIndex % gridSize;
-      const emptyRow = Math.floor(emptyIndex / gridSize);
-      const emptyCol = emptyIndex % gridSize;
-
-      const rowDiff = Math.abs(tileRow - emptyRow);
-      const colDiff = Math.abs(tileCol - emptyCol);
-
-      // Hanya boleh geser jika adjacent (horizontal atau vertical)
-      return (rowDiff === 1 && colDiff === 0) || (rowDiff === 0 && colDiff === 1);
-    },
-    [gridSize, emptyIndex]
-  );
-
-  /** Geser tile ke posisi kosong */
-  const moveTile = useCallback(
+  /** Pilih dua tile untuk ditukar posisinya */
+  const selectTile = useCallback(
     (clickedIndex: number) => {
-      if (isWon || !canMove(clickedIndex)) return;
+      if (isWon) return;
+
+      if (selectedIndex === null) {
+        setSelectedIndex(clickedIndex);
+        return;
+      }
+
+      if (selectedIndex === clickedIndex) {
+        setSelectedIndex(null);
+        return;
+      }
 
       setTiles((prev) => {
         const updated = [...prev];
-        // Cari tile di posisi yang diklik dan di posisi empty
-        const clickedTileIdx = updated.findIndex((t) => t.currentIndex === clickedIndex);
-        const emptyTileIdx = updated.findIndex((t) => t.currentIndex === emptyIndex);
+        const firstTileIdx = updated.findIndex((t) => t.currentIndex === selectedIndex);
+        const secondTileIdx = updated.findIndex((t) => t.currentIndex === clickedIndex);
 
-        if (clickedTileIdx === -1 || emptyTileIdx === -1) return prev;
+        if (firstTileIdx === -1 || secondTileIdx === -1) return prev;
 
-        // Swap currentIndex
-        const temp = updated[clickedTileIdx].currentIndex;
-        updated[clickedTileIdx] = {
-          ...updated[clickedTileIdx],
-          currentIndex: updated[emptyTileIdx].currentIndex,
+        const temp = updated[firstTileIdx].currentIndex;
+        updated[firstTileIdx] = {
+          ...updated[firstTileIdx],
+          currentIndex: updated[secondTileIdx].currentIndex,
         };
-        updated[emptyTileIdx] = {
-          ...updated[emptyTileIdx],
+        updated[secondTileIdx] = {
+          ...updated[secondTileIdx],
           currentIndex: temp,
         };
 
-        // Cek menang: semua tile di posisi benar
         const won = updated.every((t) => t.currentIndex === t.correctIndex);
         if (won) {
           setIsWon(true);
@@ -164,10 +122,11 @@ export function usePuzzle(gridSize: number = 4) {
         return updated;
       });
 
-      setEmptyIndex(clickedIndex);
       setMoveCount((m) => m + 1);
+      setLastSwap([selectedIndex, clickedIndex]);
+      setSelectedIndex(null);
     },
-    [emptyIndex, canMove, isWon]
+    [isWon, selectedIndex]
   );
 
   /** Format timer menjadi mm:ss */
@@ -175,14 +134,14 @@ export function usePuzzle(gridSize: number = 4) {
 
   return {
     tiles,
-    emptyIndex,
     moveCount,
     isWon,
     timer,
     formattedTime,
     gridSize,
     initPuzzle,
-    moveTile,
-    canMove,
+    selectTile,
+    selectedIndex,
+    lastSwap,
   };
 }

@@ -18,7 +18,16 @@ const CameraScreen = ({ onCapture, onBack }: CameraScreenProps) => {
   // Start kamera saat komponen mount
   useEffect(() => {
     startCamera();
-    return () => stopCamera();
+    const prevOverflow = document.body.style.overflow;
+    const prevOverscroll = document.body.style.overscrollBehavior;
+    document.body.style.overflow = 'hidden';
+    document.body.style.overscrollBehavior = 'none';
+
+    return () => {
+      stopCamera();
+      document.body.style.overflow = prevOverflow;
+      document.body.style.overscrollBehavior = prevOverscroll;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

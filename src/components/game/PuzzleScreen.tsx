@@ -15,11 +15,29 @@ interface PuzzleScreenProps {
  * Menampilkan grid tiles, preview gambar asli, timer, move counter, dan modal win.
  */
 const PuzzleScreen = ({ imageDataURL, gridSize: initialGridSize, levelLabel, onRestart }: PuzzleScreenProps) => {
-  const { tiles, moveCount, isWon, formattedTime, timer, gridSize, initPuzzle, moveTile, canMove } =
+  const { tiles, moveCount, isWon, formattedTime, timer, gridSize, initPuzzle, selectTile, selectedIndex, lastSwap } =
     usePuzzle(initialGridSize);
 
   const [puzzleSize, setPuzzleSize] = useState(300);
   const [showPreview, setShowPreview] = useState(false);
+  const backsoundRef = useRef<HTMLAudioElement | null>(null);
+  const finishPlayedRef = useRef(false);
+
+  useEffect(() => {
+    const audio = new Audio(`/backsound-${initialGridSize}x${initialGridSize}.mp3`);
+    audio.loop = true;
+    audio.volume = 0.25;
+    backsoundRef.current = audio;
+    audio.play().catch((err) => console.error('Audio playback error:', err));
+
+    return () => {
+      if (backsoundRef.current) {
+        backsoundRef.current.pause();
+        backsoundRef.current.currentTime = 0;
+        backsoundRef.current = null;
+      }
+    };
+  }, [initialGridSize]);
 
   useEffect(() => {
     const updateSize = () => {
@@ -37,6 +55,19 @@ const PuzzleScreen = ({ imageDataURL, gridSize: initialGridSize, levelLabel, onR
     initPuzzle(puzzleSize);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [puzzleSize]);
+
+  useEffect(() => {
+    if (isWon && !finishPlayedRef.current) {
+      const audio = new Audio('/finish.mp3');
+      audio.volume = 0.25;
+      finishPlayedRef.current = true;
+      audio.play().catch((err) => console.error('Audio playback error:', err));
+    }
+
+    if (!isWon) {
+      finishPlayedRef.current = false;
+    }
+  }, [isWon]);
 
   const gap = 3;
 
@@ -126,17 +157,16 @@ const PuzzleScreen = ({ imageDataURL, gridSize: initialGridSize, levelLabel, onR
             const tile = tilesByPosition.get(posIndex);
             if (!tile) return <div key={posIndex} />;
 
-            const isEmpty = tile.correctIndex === gridSize * gridSize - 1;
             return (
               <Tile
                 key={tile.id}
-                isEmpty={isEmpty}
                 backgroundPosition={tile.backgroundPosition}
                 imageUrl={imageDataURL}
                 imageSize={puzzleSize}
                 gridSize={gridSize}
-                onClick={() => moveTile(posIndex)}
-                canMove={canMove(posIndex)}
+                onClick={() => selectTile(posIndex)}
+                isSelected={selectedIndex === posIndex}
+                isSwapping={lastSwap?.includes(posIndex) ?? false}
               />
             );
           })}
@@ -144,7 +174,7 @@ const PuzzleScreen = ({ imageDataURL, gridSize: initialGridSize, levelLabel, onR
       </div>
 
       <p className="mt-4 text-xs text-muted-foreground">
-        Ketuk tile yang bersebelahan dengan kotak kosong untuk menggesernya
+        Ketuk dua tile untuk menukar posisinya
       </p>
 
       {/* Modal Win */}

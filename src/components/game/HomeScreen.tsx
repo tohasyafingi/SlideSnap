@@ -4,10 +4,10 @@ import { Camera, Puzzle, MoveRight, Lock } from 'lucide-react';
 export type GridLevel = { size: number; label: string; tag: string };
 
 const LEVELS: GridLevel[] = [
-  { size: 2, label: 'Tutorial', tag: '2x2' },
   { size: 3, label: 'Basic', tag: '3x3' },
   { size: 4, label: 'Medium', tag: '4x4' },
-  { size: 5, label: 'WNI', tag: '5x5' },
+  { size: 5, label: 'Hard', tag: '5x5' },
+  { size: 6, label: 'WNI', tag: '6x6' },
 ];
 
 interface HomeScreenProps {
