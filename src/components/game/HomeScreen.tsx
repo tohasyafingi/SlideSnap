@@ -79,7 +79,7 @@ const HomeScreen = ({ onStart }: HomeScreenProps) => {
       </button>
 
       <p className="mt-6 text-xs text-muted-foreground max-w-xs">
-        100% private.
+        100% Dipastikan tidak ada kebocoran data.
       </p>
     </div>
   );

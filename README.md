@@ -1,14 +1,18 @@
 # HeedopWNI
 
-A modern photo puzzle game where you capture images and solve puzzles.
+![HeedopWNI Logo](public/favicon.png)
+
+A modern photo puzzle game: take a photo, slice it into tiles, then swap tiles to rebuild it.
 
 **Features:**
-- 📸 Capture photos from your camera
-- 🧩 4 difficulty levels (2×2 Tutorial to 5×5 Expert)
+- 📸 Capture photos from your camera (front/back toggle)
+- 🧩 4 difficulty levels (3×3 Basic to 6×6 WNI)
+- 🧠 Tap two tiles to swap (no empty tile)
 - ⏱️ Real-time timer and move counter
-- 🌙 Dark mode with polished UI
+- 👀 Toggle original image preview + reshuffle
+- 🔊 Click SFX + level-based background music + win sound
 - 📱 Mobile-friendly
-- 🚀 100% client-side (no server needed)
+- 🚀 100% client-side (no server needed, photo stays in memory)
 
 ## Quick Start
 
@@ -33,7 +37,7 @@ npm run build
 # Output in dist/ folder (ready for CDN)
 ```
 
-See [DEPLOY.md](DEPLOY.md) for deployment options (Cloudflare Pages, Vercel, GitHub Pages, etc).
+
 
 ## Tech Stack
 
@@ -50,32 +54,25 @@ See [DEPLOY.md](DEPLOY.md) for deployment options (Cloudflare Pages, Vercel, Git
 src/
 ├── components/
 │   └── game/              # Game screens
-│       ├── HomeScreen     # Level selection
-│       ├── CameraScreen   # Photo capture
-│       ├── PuzzleScreen   # Game board
-│       └── Tile           # Puzzle tile component
+│       ├── HomeScreen.tsx   # Level selection
+│       ├── CameraScreen.tsx # Photo capture
+│       ├── PuzzleScreen.tsx # Game board
+│       └── Tile.tsx         # Puzzle tile component
 ├── hooks/
-│   ├── usePuzzle.ts       # Puzzle game logic
-│   ├── useCamera.ts       # Camera access
-│   └── use-toast.ts       # Toast notifications
+│   ├── usePuzzle.ts         # Puzzle game logic
+│   ├── useCamera.ts         # Camera access
+│   └── use-toast.ts         # Toast notifications
 └── pages/
-    └── Index.tsx          # Main app router
+    └── Index.tsx            # Main app router
 ```
 
 ## Game Rules
 
-1. **Select Level:** Choose difficulty (Tutorial 2×2 → Expert 5×5)
+1. **Select Level:** Choose difficulty (Basic 3×3 → WNI 6×6)
 2. **Capture Photo:** Use your camera to take a photo
-3. **Solve Puzzle:** Drag tiles to reassemble the photo
-4. **Win:** Complete the puzzle!
-
-## Deployment
-
-See [DEPLOY.md](DEPLOY.md) for:
-- Cloudflare Pages (recommended)
-- Vercel
-- GitHub Pages
-- Other CDNs
+3. **Solve Puzzle:** Tap two tiles to swap their positions
+4. **Optional Help:** Toggle preview or reshuffle
+5. **Win:** Complete the puzzle!
 
 ## Development
 
